@@ -1,0 +1,34 @@
+---
+database:
+  host: 127.0.0.1
+  port: 3306
+  name: ykval
+  username: ykval_verifier
+  password: secret
+  max_idle_connections: 10
+  max_open_connections: 20
+
+logging:
+  path: ./log
+  level: debug
+
+ksm:
+  urls:
+    - http://192.168.1.2:80/wsapi/decrypt
+    - http://localhost:8002/wsapi/decrypt
+
+sync:
+  pool:
+    - https://192.168.1.2:8080/wsapi/2.0/sync
+  allowedPool:
+    - 192.168.1.2
+    - 192.168.1.3
+  interval: 10
+  reSyncTimeout: 30
+  reSyncIpAddresses:
+    - 192.168.1.2
+  oldLimit: 10
+  fastLevel: 1
+  secureLevel: 40
+  defaultLevel: 60
+  defaultTimeout: 1

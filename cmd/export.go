@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-// exportCmd represents the export command
+// exportCmd represents the Export command
 var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Export YubiKey Info or Client Info data from the yubikey-val server",
@@ -18,7 +18,7 @@ formatted data from the yubikey-val database. This data can later be imported
 using the ` + "`go-ykval import` command",
 }
 
-// exportKeysCmd represents the export keys command
+// exportKeysCmd represents the Export YubiKeys command
 var exportKeysCmd = &cobra.Command{
 	Use:   "keys",
 	Short: "Export YubiKey Info data from the yubikey-val server",
@@ -30,7 +30,7 @@ the ` + "`go-ykval import keys` command",
 	},
 }
 
-// exportClientsCmd represents the export clients command
+// exportClientsCmd represents the Export Clients command
 var exportClientsCmd = &cobra.Command{
 	Use:   "clients",
 	Short: "Export Client Info data from the yubikey-val server",
@@ -79,8 +79,8 @@ func exportYubiKeys() {
 			key.PublicName,
 			key.SessionCounter,
 			key.UseCounter,
-			key.Low,
-			key.High,
+			key.TimestampLow,
+			key.TimestampHigh,
 			key.Nonce,
 			key.Notes,
 		)

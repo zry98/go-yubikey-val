@@ -8,13 +8,13 @@ import (
 	"github.com/valyala/fasthttp"
 	"go-yubikey-val/internal/database"
 	"go-yubikey-val/internal/logging"
-	"go-yubikey-val/internal/services/verify"
+	"go-yubikey-val/internal/services/validation"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
-// serveCmd represents the serve command
+// serveCmd represents the Serve Validation Server command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start a OTP Validation Server",
@@ -52,7 +52,7 @@ func serve() {
 	defer database.CloseStatements()
 
 	router := fasthttprouter.New()
-	router.GET("/wsapi/2.0/verify", verify.Verify) // OTP Validation route
+	router.GET("/wsapi/2.0/verify", validation.Verify) // OTP Validation route
 
 	server := fasthttp.Server{
 		Handler: router.Handler,

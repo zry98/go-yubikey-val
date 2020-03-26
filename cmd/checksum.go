@@ -10,7 +10,7 @@ import (
 	"go-yubikey-val/internal/logging"
 )
 
-// checksumCmd represents the checksum command
+// checksumCmd represents the Checksum command
 var checksumCmd = &cobra.Command{
 	Use:   "checksum",
 	Short: "Calculate a checksum of all deactivated YubiKeys Info or Client Info data",
@@ -20,7 +20,7 @@ to easily compare the state of disabled YubiKeys in two yubikey-val servers
 in the same sync pool.`,
 }
 
-// checksumDeactivatedKeysCmd represents the checksum deactivated yubikeys command (originally ykval-checksum-deactivated)
+// checksumDeactivatedKeysCmd represents the Checksum Deactivated YubiKeys command (originally ykval-checksum-deactivated)
 var checksumDeactivatedKeysCmd = &cobra.Command{
 	Use:   "deactivated",
 	Short: "Calculate a checksum of all deactivated YubiKeys Info data",
@@ -32,7 +32,7 @@ the state of disabled YubiKeys in two yubikey-val servers in the same sync pool.
 	},
 }
 
-// checksumClientsCmd represents the checksum clients command (originally ykval-checksum-clients)
+// checksumClientsCmd represents the Checksum Clients command (originally ykval-checksum-clients)
 var checksumClientsCmd = &cobra.Command{
 	Use:   "clients",
 	Short: "Calculate a checksum of all Client Info data",

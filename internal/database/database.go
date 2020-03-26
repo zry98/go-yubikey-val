@@ -70,8 +70,8 @@ func GetLocalParams(publicName string) (Params, error) {
 			PublicName:     publicName,
 			SessionCounter: -1,
 			UseCounter:     -1,
-			Low:            -1,
-			High:           -1,
+			TimestampLow:   -1,
+			TimestampHigh:  -1,
 			Nonce:          "0000000000000000",
 			Notes:          "",
 		}

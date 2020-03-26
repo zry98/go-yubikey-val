@@ -17,8 +17,8 @@ type YubiKey struct {
 	PublicName     string `db:"yk_publicname"`
 	SessionCounter int32  `db:"yk_counter"`
 	UseCounter     int32  `db:"yk_use"`
-	Low            int32  `db:"yk_low"`
-	High           int32  `db:"yk_high"`
+	TimestampLow   int32  `db:"yk_low"`
+	TimestampHigh  int32  `db:"yk_high"`
 	Nonce          string `db:"nonce"`
 	Notes          string `db:"notes"`
 }

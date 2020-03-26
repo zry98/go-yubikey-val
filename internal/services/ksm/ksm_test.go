@@ -26,25 +26,25 @@ func TestOtp2KsmUrls(t *testing.T) {
 func TestKsmDecryptOtp(t *testing.T) {
 	expected := OtpInfo{
 		SessionCounter: 1,
-		Low:            34495,
-		High:           131,
+		TimestampLow:   34495,
+		TimestampHigh:  131,
 		UseCounter:     4,
 	}
 
-	mockServer := startHttpMockServer()
+	mockServer := startMockYkKsmServer()
 	defer mockServer.Close()
 
 	urls := []string{
 		"http://127.0.0.1:8111/wsapi/decrypt?otp=interncccccbcbevjvdifndbljhrlljurbfgglnfjcfu",
 		"http://127.0.0.1:8112/wsapi/decrypt?otp=interncccccbcbevjvdifndbljhrlljurbfgglnfjcfu",
 	}
-	ok, actual := KsmDecryptOtp(urls)
+	actual, err := KsmDecryptOtp(urls)
 
-	assert.Equal(t, true, ok)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }
 
-func startHttpMockServer() *http.Server {
+func startMockYkKsmServer() *http.Server {
 	srv := &http.Server{Addr: ":8112"}
 	http.HandleFunc("/wsapi/decrypt", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, "OK counter=0001 low=86bf high=83 use=04\n")

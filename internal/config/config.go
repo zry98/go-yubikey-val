@@ -34,7 +34,8 @@ type databaseConfig struct {
 }
 
 type ksmConfig struct {
-	Urls []string
+	UseBuiltin bool `mapstructure:"use_builtin"`
+	Urls       []string
 }
 
 type syncConfig struct {

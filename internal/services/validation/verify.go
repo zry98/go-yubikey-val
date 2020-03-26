@@ -1,4 +1,4 @@
-package verify
+package validation
 
 import (
 	"crypto/subtle"
@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-// Verify handles a verify request.
+// Verify handles a validation request.
 func Verify(ctx *fasthttp.RequestCtx) {
 	paramSignature := getHttpVal(ctx, "h", "")
 	paramClientId := getHttpVal(ctx, "id", "")
@@ -186,14 +186,9 @@ func Verify(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	ksmUrls := ksm.Otp2KsmUrls(otp, clientId)
-	if ksmUrls == nil {
-		sendResp(ctx, S_BACKEND_ERROR, apiKey, nil)
-		return
-	}
-
-	ok, otpInfo := ksm.KsmDecryptOtp(ksmUrls)
-	if !ok {
+	otpInfo, err := ksm.DecryptOtp(otp, clientId)
+	if err != nil {
+		log.Error(err)
 		/**
 		 * FIXME
 		 *
@@ -228,8 +223,8 @@ func Verify(ctx *fasthttp.RequestCtx) {
 			PublicName:     publicId,
 			SessionCounter: otpInfo.SessionCounter,
 			UseCounter:     otpInfo.UseCounter,
-			Low:            otpInfo.Low,
-			High:           otpInfo.High,
+			TimestampLow:   otpInfo.TimestampLow,
+			TimestampHigh:  otpInfo.TimestampHigh,
 			Nonce:          nonce,
 		},
 		Otp: otp,
@@ -260,15 +255,15 @@ func Verify(ctx *fasthttp.RequestCtx) {
 
 	if otpParams.SessionCounter == localParams.SessionCounter &&
 		otpParams.UseCounter > localParams.UseCounter {
-		ts := (otpParams.High << 16) + otpParams.Low
-		seenTs := (localParams.High << 16) + localParams.Low
+		ts := (otpParams.TimestampHigh << 16) + otpParams.TimestampLow
+		seenTs := (localParams.TimestampHigh << 16) + localParams.TimestampLow
 		tsDiff := ts - seenTs
 		tsDelta := float32(tsDiff) * TS_SEC
 
 		elapsed := float32(time.Now().Unix() - int64(localParams.ModifiedAt))
 		deviation := float32(math.Abs(float64(elapsed - tsDelta)))
 
-		// Time delta server might verify multiple OTPs in a row. In such case validation server doesn't
+		// Time delta server might validation multiple OTPs in a row. In such case validation server doesn't
 		// have time to tick a whole second and we need to avoid division by zero.
 		var percent float32
 		if elapsed != 0 {
@@ -308,7 +303,7 @@ func Verify(ctx *fasthttp.RequestCtx) {
 	extra = append(extra, fmt.Sprintf("sl=%v", 0)) // TODO: implement sync
 
 	if paramTimestamp == "1" {
-		extra = append(extra, fmt.Sprintf("timestamp=%v", (otpParams.High<<16)+otpParams.Low))
+		extra = append(extra, fmt.Sprintf("timestamp=%v", (otpParams.TimestampHigh<<16)+otpParams.TimestampLow))
 		extra = append(extra, fmt.Sprintf("sessioncounter=%v", otpParams.SessionCounter))
 		extra = append(extra, fmt.Sprintf("sessionuse=%v", otpParams.UseCounter))
 	}

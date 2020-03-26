@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-// importCmd represents the import command (originally ykval-import & ykval-import-clients)
+// importCmd represents the Import command
 var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import Yubikey Info or Client Info data into the yubikey-val server",
@@ -20,7 +20,7 @@ and import it into the yubikey-val servers database. The data should
 previously have been exported using the ` + "`go-ykval export` command",
 }
 
-// importKeysCmd represents the import keys command (originally ykval-import)
+// importKeysCmd represents the Import YubiKeys command (originally ykval-import)
 var importKeysCmd = &cobra.Command{
 	Use:   "keys",
 	Short: "Import Yubikey Info data into the yubikey-val server",
@@ -32,7 +32,7 @@ using the ` + "`go-ykval export keys` command",
 	},
 }
 
-// importClientsCmd represents the import clients command (originally ykval-import-clients)
+// importClientsCmd represents the Import Clients command (originally ykval-import-clients)
 var importClientsCmd = &cobra.Command{
 	Use:   "clients",
 	Short: "Import Client Info data into the yubikey-val server",
@@ -91,8 +91,8 @@ func importYubiKeys() {
 			PublicName:     line[3],
 			SessionCounter: mustToInt32(line[4]),
 			UseCounter:     mustToInt32(line[5]),
-			Low:            mustToInt32(line[6]),
-			High:           mustToInt32(line[7]),
+			TimestampLow:   mustToInt32(line[6]),
+			TimestampHigh:  mustToInt32(line[7]),
 			Nonce:          line[8],
 			Notes:          line[9],
 		}

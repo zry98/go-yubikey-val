@@ -13,9 +13,43 @@ import (
 	"time"
 )
 
-// generateCmd represents the gen command (originally ykval-gen-clients)
+// generateCmd represents the Generate command
 var generateCmd = &cobra.Command{
-	Use:   "gen [num_clients]",
+	Use:   "gen",
+	Short: "Generate YubiKey secrets or API clients",
+	Long:  ``,
+}
+
+// generateKeysCmd represents the Generate YubiKeys command (originally yhsm-generate-keys)
+var generateKeysCmd = &cobra.Command{
+	Use:   "keys",
+	Short: "Generate YubiKey secrets",
+	Long: `Generate secrets for YubiKeys using YubiHSM`,
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return nil
+		}
+		if len(args) == 1 {
+			_, err := strconv.Atoi(args[0])
+			if err != nil && err.(*strconv.NumError).Err == strconv.ErrSyntax {
+				return fmt.Errorf("num_clients should be an integer\n")
+			}
+			return err
+		}
+		return fmt.Errorf("invalid number of args\n")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		numClients := 1
+		if len(args) == 1 {
+			numClients, _ = strconv.Atoi(args[0])
+		}
+		generateClients(numClients)
+	},
+}
+
+// generateClientsCmd represents the Generate Clients command (originally ykval-gen-clients)
+var generateClientsCmd = &cobra.Command{
+	Use:   "clients [num_clients]",
 	Short: "Generate Yubikey API clients",
 	Long: `Generate clients and client secrets, and insert them into the yubikey-val
 database. They are also printed to stdout as comma separated lines 
@@ -50,10 +84,12 @@ var (
 )
 
 func init() {
-	generateCmd.Flags().BoolVar(&urandom, "urandom", false, "use /dev/urandom instead of /dev/random as entropy source")
-	generateCmd.Flags().StringVar(&email, "email", "", "set the e-mail field of the created clients")
-	generateCmd.Flags().StringVar(&notes, "notes", "", "set the notes field of the created clients")
-	generateCmd.Flags().StringVar(&otp, "otp", "", "set the otp field of the created clients")
+	generateCmd.AddCommand(generateKeysCmd)
+	generateClientsCmd.Flags().BoolVar(&urandom, "urandom", false, "use /dev/urandom instead of /dev/random as entropy source")
+	generateClientsCmd.Flags().StringVar(&email, "email", "", "set the e-mail field of the created clients")
+	generateClientsCmd.Flags().StringVar(&notes, "notes", "", "set the notes field of the created clients")
+	generateClientsCmd.Flags().StringVar(&otp, "otp", "", "set the otp field of the created clients")
+	generateCmd.AddCommand(generateClientsCmd)
 	rootCmd.AddCommand(generateCmd)
 }
 

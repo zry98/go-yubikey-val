@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"go-yubikey-val/internal/asynchttp"
 	"go-yubikey-val/internal/config"
+	"go-yubikey-val/internal/database"
 )
 
 type OtpInfo struct {
@@ -20,41 +21,52 @@ type OtpInfo struct {
 func DecryptOtp(otpString string, clientId int32) (OtpInfo, error) {
 	if config.Ksm.UseBuiltin {
 		return BuiltInDecryptOtp(otpString)
-	} else {
-		ksmUrls := Otp2KsmUrls(otpString, clientId)
-		if ksmUrls == nil {
-			log.Error("Otp2KsmUrls returns empty result, check the config")
-			return OtpInfo{}, fmt.Errorf("Empty KSM URLs")
-		}
-		return KsmDecryptOtp(ksmUrls)
 	}
+
+	ksmUrls := Otp2KsmUrls(otpString, clientId)
+	if ksmUrls == nil {
+		log.Error("Otp2KsmUrls returned an empty result, please check the config")
+		return OtpInfo{}, fmt.Errorf("Empty KSM URLs")
+	}
+	return KsmDecryptOtp(ksmUrls)
 }
 
 // BuiltInDecryptOtp decrypts OTP with Built-in KSM.
 func BuiltInDecryptOtp(otpString string) (OtpInfo, error) {
-	_, otp, err := yubikey.ParseOTPString(otpString)
+	var otpInfo OtpInfo
+
+	yubikeyPublicName, otp, err := yubikey.ParseOTPString(otpString)
 	if err != nil {
-		log.Info("error parsing OTP string", err)
-		return OtpInfo{}, err
+		log.Info("error parsing OTP string: ", err)
+		return otpInfo, err
 	}
-	keyBytes, err := hex.DecodeString("e0ecfeecd252f168ea498c4403a38338")
+
+	secretKeyString, err := database.GetSecretKey(string(yubikeyPublicName))
 	if err != nil {
-		fmt.Println("error decoding key:", err)
-		return OtpInfo{}, err
+		log.Error("error getting secret key for yubikey: ", err)
+		return otpInfo, err
+	}
+
+	keyBytes, err := hex.DecodeString(secretKeyString)
+	if err != nil {
+		log.Error("error decoding key: ", err)
+		return otpInfo, err
 	}
 	key := yubikey.NewKey(keyBytes)
 	token, err := otp.Parse(key)
 	if err != nil {
-		log.Info("yubikey.Parse error:", err)
-		return OtpInfo{}, err
+		log.Error("yubikey.Parse error: ", err)
+		return otpInfo, err
 	}
 
-	return OtpInfo{
+	otpInfo = OtpInfo{
 		SessionCounter: int32(token.Ctr),
 		TimestampLow:   int32(token.Tstpl),
 		TimestampHigh:  int32(token.Tstph),
 		UseCounter:     int32(token.Use),
-	}, nil
+	}
+
+	return otpInfo, nil
 }
 
 // Otp2KsmUrls converts an OTP array to an array of YK-KSM URLs for decrypting OTP for client.

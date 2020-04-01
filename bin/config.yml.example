@@ -5,16 +5,17 @@ database:
   name: ykval
   username: ykval_verifier
   password: secret
-  max_idle_connections: 10
-  max_open_connections: 20
+  max_idle_connections: 2
+  max_open_connections: 10
 
 logging:
   path: ./log
   level: debug
 
 ksm:
+  use_builtin: false
   urls:
-    - http://192.168.1.2:80/wsapi/decrypt
+    - http://192.168.2.2:8002/wsapi/decrypt
     - http://localhost:8002/wsapi/decrypt
 
 sync:

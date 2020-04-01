@@ -63,7 +63,7 @@ func checksumDeactivatedKeys() {
 	database.Setup()
 	defer database.DB.Close()
 
-	rows, err := database.DB.Queryx(`SELECT yk_publicname, yk_counter, yk_use FROM yubikeys WHERE active=FALSE ORDER BY yk_publicname;`)
+	rows, err := database.DB.Queryx(`SELECT public_name, session_counter, use_counter FROM yubikeys WHERE active=FALSE ORDER BY public_name`)
 	if err != nil {
 		log.Error(err)
 		fmt.Println(err)
@@ -101,7 +101,7 @@ func checksumClients() {
 	database.Setup()
 	defer database.DB.Close()
 
-	rows, err := database.DB.Queryx(`SELECT id, active, secret FROM clients ORDER BY id;`)
+	rows, err := database.DB.Queryx(`SELECT id, active, secret FROM clients ORDER BY id`)
 	if err != nil {
 		log.Error(err)
 		fmt.Println(err)

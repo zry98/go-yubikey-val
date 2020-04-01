@@ -148,7 +148,7 @@ func Verify(ctx *fasthttp.RequestCtx) {
 	client, err := database.GetClientData(clientId)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Info("Invalid client id", clientId)
+			log.Info("Invalid client id: ", clientId)
 			sendResp(ctx, S_NO_SUCH_CLIENT, "", nil)
 			return
 		} else {
@@ -157,7 +157,7 @@ func Verify(ctx *fasthttp.RequestCtx) {
 			return
 		}
 	}
-	log.Debug("Client data:", client)
+	log.Debug("Client data: ", client)
 
 	/**
 	 * Check client signature
@@ -188,7 +188,6 @@ func Verify(ctx *fasthttp.RequestCtx) {
 
 	otpInfo, err := ksm.DecryptOtp(otp, clientId)
 	if err != nil {
-		log.Error(err)
 		/**
 		 * FIXME
 		 *

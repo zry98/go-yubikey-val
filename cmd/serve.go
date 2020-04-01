@@ -60,9 +60,6 @@ func serve() {
 
 	listenAddress := fmt.Sprintf("%s:%d", host, port)
 
-	done := make(chan os.Signal, 1)
-	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
 	go func() {
 		if err := server.ListenAndServe(listenAddress); err != nil {
 			log.Fatal(err)
@@ -71,7 +68,9 @@ func serve() {
 	log.Info("Server started, listening on ", listenAddress)
 	fmt.Println("Server started, listening on", listenAddress)
 
-	<-done
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
 	log.Info("Server shutdown")
 
 	if err := server.Shutdown(); err != nil {

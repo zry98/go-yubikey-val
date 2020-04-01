@@ -101,14 +101,14 @@ func generateClients(numClients int) {
 	defer database.DB.Close()
 
 	var nextId int32
-	err := database.DB.QueryRow(`SELECT id FROM clients ORDER BY id DESC LIMIT 1;`).Scan(&nextId)
+	err := database.DB.QueryRow(`SELECT id FROM clients ORDER BY id DESC LIMIT 1`).Scan(&nextId)
 	if err != nil && err != sql.ErrNoRows {
 		log.Error(err)
 		fmt.Println(err)
 		return
 	}
 
-	stmtInsertClient, err := database.DB.PrepareNamed(`INSERT INTO clients (id, active, created, secret, email, notes, otp) VALUES (:id, :active, :created, :secret, :email, :notes, :otp);`)
+	stmtInsertClient, err := database.DB.PrepareNamed(`INSERT INTO clients VALUES (:id, :active, :created_at, :secret, :email, :notes, :otp)`)
 	if err != nil {
 		log.Error(err)
 		fmt.Println(err)

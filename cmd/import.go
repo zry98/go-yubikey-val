@@ -64,19 +64,19 @@ func importYubiKeys() {
 	database.Setup()
 	defer database.DB.Close()
 
-	stmtCheckKeyExists, err := database.DB.Preparex(`SELECT EXISTS (SELECT 1 FROM yubikeys WHERE yk_publicname=?);`)
+	stmtCheckKeyExists, err := database.DB.Preparex(`SELECT EXISTS (SELECT 1 FROM yubikeys WHERE public_name=?)`)
 	if err != nil {
 		log.Error(err)
 		fmt.Println(err)
 		return
 	}
-	stmtInsertKey, err := database.DB.PrepareNamed(`INSERT INTO yubikeys (active, created, modified, yk_publicname, yk_counter, yk_use, yk_low, yk_high, nonce, notes) VALUES (:active, :created, :modified, :yk_publicname, :yk_counter, :yk_use, :yk_low, :yk_high, :nonce, :notes);`)
+	stmtInsertKey, err := database.DB.PrepareNamed(`INSERT INTO yubikeys VALUES (:public_name, :active, :created_at, :modified_at, :session_counter, :use_counter, :timestamp_low, :timestamp_high, :nonce, :notes, :secret_key)`)
 	if err != nil {
 		log.Error(err)
 		fmt.Println(err)
 		return
 	}
-	stmtUpdateKey, err := database.DB.PrepareNamed(`UPDATE yubikeys SET active=:active, created=:created, modified=:modified, yk_counter=:yk_counter, yk_use=:yk_use, yk_high=:yk_low, nonce=:nonce, notes=:notes WHERE yk_publicname=:yk_publicname AND (yk_counter<:yk_counter OR (yk_counter=:yk_counter AND yk_use<:yk_use));`)
+	stmtUpdateKey, err := database.DB.PrepareNamed(`UPDATE yubikeys SET active=:active, created_at=:created_at, modified_at=:modified_at, session_counter=:session_counter, use_counter=:use_counter, timestamp_low=:timestamp_low, timestamp_high=:timestamp_high, nonce=:nonce, notes=:notes WHERE public_name=:public_name AND (session_counter<:session_counter OR (session_counter=:session_counter AND use_counter<:use_counter))`)
 	if err != nil {
 		log.Error(err)
 		fmt.Println(err)
@@ -149,13 +149,13 @@ func importClients() {
 	database.Setup()
 	defer database.DB.Close()
 
-	stmtCheckClientExists, err := database.DB.Preparex(`SELECT EXISTS (SELECT 1 FROM clients WHERE id=?);`)
+	stmtCheckClientExists, err := database.DB.Preparex(`SELECT EXISTS (SELECT 1 FROM clients WHERE id=?)`)
 	if err != nil {
 		log.Error(err)
 		fmt.Println(err)
 		return
 	}
-	stmtInsertClient, err := database.DB.PrepareNamed(`INSERT INTO clients (id, active, created, secret, email, notes, otp) VALUES (:id, :active, :created, :secret, :email, :notes, :otp);`)
+	stmtInsertClient, err := database.DB.PrepareNamed(`INSERT INTO clients VALUES (:id, :active, :created_at, :secret, :email, :notes, :otp)`)
 	if err != nil {
 		log.Error(err)
 		fmt.Println(err)

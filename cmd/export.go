@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"go-yubikey-val/internal/database"
 	"go-yubikey-val/internal/logging"
-	"os"
 )
 
 // exportCmd represents the Export command
@@ -55,10 +54,10 @@ func exportYubiKeys() {
 	database.Setup()
 	defer database.DB.Close()
 
-	rows, err := database.DB.Queryx(`SELECT active, created, modified, yk_publicname, yk_counter, yk_use, yk_low, yk_high, nonce, notes FROM yubikeys ORDER BY yk_publicname;`)
+	rows, err := database.DB.Queryx(`SELECT active, created_at, modified_at, public_name, session_counter, use_counter, timestamp_low, timestamp_high, nonce, notes FROM yubikeys ORDER BY public_name`)
 	if err != nil {
 		log.Error(err)
-		os.Exit(1)
+		return
 	}
 
 	for rows.Next() {
@@ -94,7 +93,7 @@ func exportClients() {
 	database.Setup()
 	defer database.DB.Close()
 
-	rows, err := database.DB.Queryx(`SELECT id, active, created, secret, email, notes, otp FROM clients ORDER BY id;`)
+	rows, err := database.DB.Queryx(`SELECT id, active, created_at, secret, email, notes, otp FROM clients ORDER BY id`)
 	if err != nil {
 		log.Error(err)
 		return

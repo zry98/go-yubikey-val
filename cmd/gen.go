@@ -4,12 +4,15 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"go-yubikey-val/internal/database"
 	"go-yubikey-val/internal/logging"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -24,7 +27,7 @@ var generateCmd = &cobra.Command{
 var generateKeysCmd = &cobra.Command{
 	Use:   "keys",
 	Short: "Generate YubiKey secrets",
-	Long: `Generate secrets for YubiKeys using YubiHSM`,
+	Long:  `Generate secrets for YubiKeys using YubiHSM`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return nil
@@ -77,20 +80,84 @@ containing client_id, secret`,
 }
 
 var (
-	urandom bool
-	email   string
-	notes   string
-	otp     string
+	device        string
+	outputDir     string
+	count         int32
+	publicIdChars int32
+	keyHandles    []string
+	startPublicId string
+	randomNonce   bool
+	urandom       bool
+	email         string
+	notes         string
+	otp           string
 )
 
 func init() {
+	generateKeysCmd.Flags().StringVarP(&device, "device", "D", "/dev/ttyACM0", "YubiHSM device")
+	generateKeysCmd.Flags().StringVarP(&outputDir, "output-dir", "O", "/var/cache/yubikey-ksm/aeads", "Output directory (AEAD base dir)")
+	generateKeysCmd.Flags().Int32VarP(&count, "count", "c", 1, "Number of secrets to generate")
+	generateKeysCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose operation")
+	generateKeysCmd.Flags().Int32Var(&publicIdChars, "public-id-chars", 12, "Number of chars in generated public ids")
+	generateKeysCmd.Flags().StringArrayVar(&keyHandles, "key-handles", nil, "Key handles to encrypt the generated secrets with")
+	generateKeysCmd.Flags().StringVar(&startPublicId, "start-public-id", "", "The first public id to generate AEAD for")
+	generateKeysCmd.Flags().BoolVar(&randomNonce, "random-nonce", false, "Let the HSM generate nonce")
+	_ = generateKeysCmd.MarkFlagRequired("key-handles")
+	_ = generateKeysCmd.MarkFlagRequired("start-public-id")
 	generateCmd.AddCommand(generateKeysCmd)
+
 	generateClientsCmd.Flags().BoolVar(&urandom, "urandom", false, "use /dev/urandom instead of /dev/random as entropy source")
 	generateClientsCmd.Flags().StringVar(&email, "email", "", "set the e-mail field of the created clients")
 	generateClientsCmd.Flags().StringVar(&notes, "notes", "", "set the notes field of the created clients")
 	generateClientsCmd.Flags().StringVar(&otp, "otp", "", "set the otp field of the created clients")
 	generateCmd.AddCommand(generateClientsCmd)
+
 	rootCmd.AddCommand(generateCmd)
+}
+
+func generateKeys() {
+	logging.Setup("generate-keys")
+	defer logging.File.Close()
+
+	database.Setup()
+	defer database.DB.Close()
+
+	if fi, err := os.Stat(outputDir); err != nil || !fi.IsDir() {
+		log.Errorf("Output directory '%s' does not exist.\n", outputDir)
+		fmt.Printf("Output directory '%s' does not exist.\n", outputDir)
+		os.Exit(1)
+		return
+	}
+
+	if _, err := os.Stat(device); err != nil {
+		log.Errorf("Device '%s' does not exist.\n", device)
+		fmt.Printf("Device '%s' does not exist.\n", device)
+		os.Exit(1)
+		return
+	}
+
+	handles := make(map[int32]string)
+	for _, val := range keyHandles {
+		for _, keyHandle := range strings.Split(val, ",") {
+			handles[keyHandleToInt32(keyHandle)] = keyHandle
+		}
+	}
+}
+
+func keyHandleToInt32(keyHandle string) int32 {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Could not parse key_handle '%s'\n", keyHandle)
+			os.Exit(1)
+		}
+	}()
+
+	n, err := strconv.ParseInt(keyHandle, 0, 32)
+	if err == nil {
+		return int32(n)
+	}
+
+	return int32(binary.LittleEndian.Uint32([]byte(keyHandle)))
 }
 
 func generateClients(numClients int) {
@@ -138,7 +205,7 @@ func generateClients(numClients int) {
 		_, err = stmtInsertClient.Exec(client)
 		if err != nil {
 			log.Error(err)
-			log.Error("Failed to insert new client with query", client)
+			log.Error("Failed to insert new client with query ", client)
 			fmt.Println(err)
 			fmt.Println("Failed to insert new client with query", client)
 			return

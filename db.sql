@@ -35,6 +35,21 @@ CREATE TABLE `yubikeys`
 );
 
 -- ----------------------------
+-- Table structure for aeads
+-- ----------------------------
+DROP TABLE IF EXISTS `aeads`;
+CREATE TABLE `aeads`
+(
+    `queued_at`    INT DEFAULT NULL,
+    `modified_at`  INT DEFAULT NULL,
+    `server_nonce` VARCHAR(32)  NOT NULL,
+    `otp`          VARCHAR(100) NOT NULL,
+    `server`       VARCHAR(100) NOT NULL,
+    `info`         VARCHAR(256) NOT NULL
+);
+
+
+-- ----------------------------
 -- Table structure for queue
 -- ----------------------------
 DROP TABLE IF EXISTS `queue`;

@@ -43,7 +43,9 @@ the ` + "`go-ykval import clients` command",
 
 func init() {
 	exportCmd.AddCommand(exportKeysCmd)
+
 	exportCmd.AddCommand(exportClientsCmd)
+
 	rootCmd.AddCommand(exportCmd)
 }
 

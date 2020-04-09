@@ -52,7 +52,9 @@ var (
 func init() {
 	checksumCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "make the operation more talkative")
 	checksumCmd.AddCommand(checksumDeactivatedKeysCmd)
+
 	checksumCmd.AddCommand(checksumClientsCmd)
+
 	rootCmd.AddCommand(checksumCmd)
 }
 
